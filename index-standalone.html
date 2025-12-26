@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub - React App</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+:root {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #242424;
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --border-color: #2a2a2a;
+  --card-bg: #1a1a1a;
+  --modal-bg: #1a1a1a;
+  --accent: #6366f1;
+}
+
+body.light-mode {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --card-bg: #ffffff;
+  --modal-bg: #ffffff;
+  --accent: #6366f1;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+  max-width: 414px;
+  margin: 0 auto;
+  background: var(--bg-primary);
+  min-height: 100vh;
+  position: relative;
+  transition: background-color 0.3s;
+}
+
+.header {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 16px 20px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  flex: 1;
+}
+
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.filters {
+  display: flex;
+  padding: 16px;
+  gap: 8px;
+  background: var(--bg-primary);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-btn {
+  padding: 10px 18px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-secondary);
+}
+
+.filter-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+}
+
+.filter-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.explore-feed {
+  padding: 15px;
+  padding-bottom: 100px;
+}
+
+.event-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  margin-bottom: 16px;
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.5);
+}
+
+.event-card-image {
+  height: 300px;
+  position: relative;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  z-index: 2;
+}
+
+.category-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  z-index: 2;
+}
+
+.event-info-image {
+  padding: 15px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 60%, transparent 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-date, .event-location, .event-host {
+  font-size: 11px;
+  color: #b8b8b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-icon {
+  color: #667eea;
+  font-size: 12px;
+}
+
+.event-attendees-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.attendee-avatars-card {
+  display: flex;
+  gap: -8px;
+}
+
+.attendee-avatars-card .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  border: 2px solid rgba(0, 0, 0, 0.8);
+  margin-left: -6px;
+}
+
+.attendee-avatars-card .avatar:first-child {
+  margin-left: 0;
+}
+
+.event-attendees-count {
+  font-size: 11px;
+  color: white;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state .icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 414px;
+  background: var(--bg-secondary);
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-color);
+  z-index: 50;
+}
+
+.nav-item {
+  text-align: center;
+  cursor: pointer;
+  flex: 1;
+  padding: 8px;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  color: var(--accent);
+}
+
+.nav-item .icon {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+.modal.active {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-content {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-primary);
+  width: 100%;
+  max-width: 414px;
+  height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 80px;
+}
+
+.modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.modal-body {
+  padding: 20px;
+  color: var(--text-primary);
+}
+
+.profile-header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 32px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 auto 15px;
+  border: 3px solid white;
+}
+
+.profile-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.profile-username {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 10px;
+}
+
+.profile-bio {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 20px;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 5px;
+}
+
+.profile-section {
+  padding: 0 15px 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: var(--text-primary);
+}
+
+.settings-list {
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.settings-item {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.settings-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-item.logout {
+  color: #ef4444;
+}
+
+.profile-events-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.profile-event-item {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profile-event-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.profile-event-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.profile-event-info {
+  flex: 1;
+}
+
+.profile-event-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: var(--text-primary);
+}
+
+.profile-event-detail {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.toggle-section {
+  padding: 16px;
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.toggle-switch {
+  width: 48px;
+  height: 26px;
+  background: var(--bg-tertiary);
+  border-radius: 13px;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.toggle-switch.active {
+  background: var(--accent);
+}
+
+.message-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.2s;
+}
+
+.message-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.message-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.message-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.message-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.message-preview {
+  font-size: 14px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-unread-badge {
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 14px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+}
+
+.btn-success {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-success:hover {
+  background: #5558e3;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.action-buttons .btn {
+  flex: 1;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.user-detail {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.event-page-image {
+  height: 280px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  background-size: cover;
+  background-position: center;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.chat-message {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.chat-message.me {
+  justify-content: flex-end;
+}
+
+.chat-message-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.4;
+}
+
+.chat-message.me .chat-message-bubble {
+  background: var(--accent);
+  color: white;
+  border-bottom-right-radius: 6px;
+}
+
+.chat-message:not(.me) .chat-message-bubble {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-bottom-left-radius: 6px;
+}
+
+.chat-message-sender {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.chat-message-timestamp {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+const { useState } = React;
+
+const INITIAL_EVENTS = [
+  {
+    id: 1,
+    title: 'Beach Volleyball Tournament',
+    category: 'social',
+    date: '2024-09-15',
+    time: '14:00',
+    location: 'Santa Monica Beach',
+    description: 'Join us for an exciting beach volleyball tournament. All skill levels welcome!',
+    attendees: 45,
+    maxAttendees: 60,
+    image: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    host: 'Sarah Mitchell',
+    cost: 25,
+    attendeesList: [
+      { name: 'John Doe', initial: 'JD' },
+      { name: 'Emma Wilson', initial: 'EW' },
+      { name: 'Mike Johnson', initial: 'MJ' },
+    ],
+    saved: false,
+  },
+  {
+    id: 2,
+    title: 'Yoga & Meditation Class',
+    category: 'fitness',
+    date: '2024-09-16',
+    time: '08:00',
+    location: 'Central Park',
+    description: 'Start your morning with a rejuvenating yoga session.',
+    attendees: 32,
+    maxAttendees: 40,
+    image: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    host: 'Lisa Chen',
+    cost: 15,
+    attendeesList: [
+      { name: 'Amy Brown', initial: 'AB' },
+      { name: 'Chris Lee', initial: 'CL' },
+    ],
+    saved: false,
+  },
+  {
+    id: 3,
+    title: 'Photography Workshop',
+    category: 'creative',
+    date: '2024-09-17',
+    time: '10:00',
+    location: 'Downtown Studio',
+    description: 'Learn professional photography techniques from industry experts.',
+    attendees: 18,
+    maxAttendees: 25,
+    image: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    host: 'David Kim',
+    cost: 50,
+    attendeesList: [
+      { name: 'Rachel Green', initial: 'RG' },
+      { name: 'Tom Harris', initial: 'TH' },
+      { name: 'Julia Roberts', initial: 'JR' },
+    ],
+    saved: false,
+  },
+  {
+    id: 4,
+    title: 'Tech Networking Event',
+    category: 'professional',
+    date: '2024-09-18',
+    time: '18:00',
+    location: 'Tech Hub Downtown',
+    description: 'Connect with fellow tech enthusiasts and industry leaders.',
+    attendees: 76,
+    maxAttendees: 100,
+    image: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    host: 'Alex Turner',
+    cost: 0,
+    attendeesList: [
+      { name: 'Patrick Wilson', initial: 'PW' },
+      { name: 'Sophie Martin', initial: 'SM' },
+    ],
+    saved: false,
+  },
+];
+
+const INITIAL_MESSAGES = [
+  {
+    id: 1,
+    name: 'Sarah Mitchell',
+    preview: "Hey! Don't forget about the volleyball game tomorrow!",
+    time: '2:30 PM',
+    unread: 2,
+  },
+  {
+    id: 2,
+    name: 'Lisa Chen',
+    preview: 'The yoga class was amazing! See you next week?',
+    time: '1:15 PM',
+    unread: 0,
+  },
+  {
+    id: 3,
+    name: 'David Kim',
+    preview: 'Photography workshop details are finalized',
+    time: '11:45 AM',
+    unread: 1,
+  },
+];
+
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('explore');
+  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [messages] = useState(INITIAL_MESSAGES);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [activeModal, setActiveModal] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [lightMode, setLightMode] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    category: 'social',
+    date: '',
+    time: '',
+    location: '',
+    cost: '0',
+    maxAttendees: '',
+    description: '',
+  });
+
+  const filteredEvents = events.filter(event => {
+    if (selectedCategories.length > 0 && !selectedCategories.includes(event.category)) {
+      return false;
+    }
+    return true;
+  });
+
+  const savedEvents = events.filter(e => e.saved);
+
+  const renderExplorePage = () => (
+    <div className="explore-feed">
+      <div className="filters">
+        <button
+          className={`filter-btn ${selectedCategories.length === 0 ? 'active' : ''}`}
+          onClick={() => setSelectedCategories([])}
+        >
+          All
+        </button>
+        {['social', 'fitness', 'creative', 'professional'].map(cat => (
+          <button
+            key={cat}
+            className={`filter-btn ${selectedCategories.includes(cat) ? 'active' : ''}`}
+            onClick={() => {
+              setSelectedCategories(prev =>
+                prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+              );
+            }}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </button>
+        ))}
+        <button className="filter-btn" onClick={() => setActiveModal('advancedFilters')}>
+          Filters
+        </button>
+      </div>
+      <div>
+        {filteredEvents.length === 0 ? (
+          <div className="empty-state">
+            <div className="icon">📭</div>
+            <h3>No events found</h3>
+            <p>Try adjusting your filters</p>
+          </div>
+        ) : (
+          filteredEvents.map(event => (
+            <div
+              key={event.id}
+              className="event-card"
+              onClick={() => {
+                setSelectedEvent(event);
+                setActiveModal('eventDetails');
+              }}
+            >
+              <div
+                className="event-card-image"
+                style={{ background: event.image }}
+              >
+                <button
+                  className="save-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEvents(events.map(ev =>
+                      ev.id === event.id ? { ...ev, saved: !ev.saved } : ev
+                    ));
+                  }}
+                >
+                  {event.saved ? '❤️' : '🤍'}
+                </button>
+                <div className="category-badge">
+                  {event.category === 'social' ? '👥' : event.category === 'fitness' ? '💪' : event.category === 'creative' ? '🎨' : '💼'}
+                </div>
+                <div className="event-info-image">
+                  <div className="event-title">{event.title}</div>
+                  <div className="event-date">
+                    <span className="meta-icon">📅</span>
+                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {event.time}
+                  </div>
+                  <div className="event-location">
+                    <span className="meta-icon">📍</span>
+                    {event.location}
+                  </div>
+                  <div className="event-host">
+                    <span className="meta-icon">👤</span>
+                    {event.host}
+                  </div>
+                  <div className="event-attendees-bottom">
+                    <div className="attendee-avatars-card">
+                      {event.attendeesList.slice(0, 3).map((att, idx) => (
+                        <div key={idx} className="avatar" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                          {att.initial}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="event-attendees-count">{event.attendees}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSavedPage = () => (
+    <div className="explore-feed">
+      {savedEvents.length === 0 ? (
+        <div className="empty-state">
+          <div className="icon">❤️</div>
+          <h3>No Saved Events</h3>
+          <p>Save your favorite events to see them here</p>
+        </div>
+      ) : (
+        savedEvents.map(event => (
+          <div
+            key={event.id}
+            className="event-card"
+            onClick={() => {
+              setSelectedEvent(event);
+              setActiveModal('eventDetails');
+            }}
+          >
+            <div
+              className="event-card-image"
+              style={{ background: event.image }}
+            >
+              <button
+                className="save-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEvents(events.map(ev =>
+                    ev.id === event.id ? { ...ev, saved: !ev.saved } : ev
+                  ));
+                }}
+              >
+                ❤️
+              </button>
+              <div className="event-info-image">
+                <div className="event-title">{event.title}</div>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const renderMessagesPage = () => (
+    <div className="explore-feed">
+      {messages.length === 0 ? (
+        <div className="empty-state">
+          <div className="icon">💬</div>
+          <h3>No Messages</h3>
+          <p>Start chatting with event hosts and attendees</p>
+        </div>
+      ) : (
+        messages.map(msg => (
+          <div key={msg.id} className="message-item" onClick={() => setActiveModal('chat')}>
+            <div className="message-avatar">
+              {msg.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div className="message-content">
+              <div className="message-header">
+                <div className="message-name">{msg.name}</div>
+                <div className="message-time">{msg.time}</div>
+              </div>
+              <div className="message-preview">{msg.preview}</div>
+            </div>
+            {msg.unread > 0 && (
+              <div className="message-unread-badge">{msg.unread}</div>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const renderProfilePage = () => (
+    <div className="explore-feed">
+      <div className="profile-header">
+        <div className="profile-avatar-large">JD</div>
+        <h2 className="profile-name">John Doe</h2>
+        <p className="profile-username">@johndoe</p>
+        <p className="profile-bio">Adventure seeker | Coffee lover | Events enthusiast</p>
+        <div className="profile-stats">
+          <div className="stat">
+            <div className="stat-value">24</div>
+            <div className="stat-label">Events Attended</div>
+          </div>
+          <div className="stat">
+            <div className="stat-value">8</div>
+            <div className="stat-label">Events Hosted</div>
+          </div>
+          <div className="stat">
+            <div className="stat-value">4.7</div>
+            <div className="stat-label">Rating</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="profile-section">
+        <h3 className="section-title">Your Upcoming Events</h3>
+        <div className="profile-events-grid">
+          {filteredEvents.slice(0, 2).map(event => (
+            <div key={event.id} className="profile-event-item">
+              <div className="profile-event-icon">
+                {event.category === 'social' ? '👥' : event.category === 'fitness' ? '💪' : event.category === 'creative' ? '🎨' : '💼'}
+              </div>
+              <div className="profile-event-info">
+                <div className="profile-event-title">{event.title}</div>
+                <div className="profile-event-detail">
+                  {new Date(event.date).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="profile-section">
+        <h3 className="section-title">Connection Preferences</h3>
+        <div className="toggle-section">
+          <span className="toggle-label">Open to Connections</span>
+          <button className="toggle-switch active"></button>
+        </div>
+      </div>
+
+      <div className="profile-section">
+        <h3 className="section-title">Account Settings</h3>
+        <div className="settings-list">
+          <div className="settings-item">
+            <span>Edit Profile</span>
+            <span>→</span>
+          </div>
+          <div className="settings-item">
+            <span>Notifications</span>
+            <span>→</span>
+          </div>
+          <div className="settings-item">
+            <span>Privacy Settings</span>
+            <span>→</span>
+          </div>
+          <div className="settings-item">
+            <span>Help & Support</span>
+            <span>→</span>
+          </div>
+          <div className="settings-item logout">
+            <span>Log Out</span>
+            <span>→</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`container ${lightMode ? 'light-mode' : ''}`}>
+      <div className="header">
+        <h1>EventHub</h1>
+        <button 
+          className="theme-toggle" 
+          onClick={() => setLightMode(!lightMode)}
+        >
+          {lightMode ? '🌙' : '☀️'}
+        </button>
+      </div>
+
+      {currentPage === 'explore' && renderExplorePage()}
+      {currentPage === 'saved' && renderSavedPage()}
+      {currentPage === 'messages' && renderMessagesPage()}
+      {currentPage === 'profile' && renderProfilePage()}
+
+      <div className="bottom-nav">
+        <div
+          className={`nav-item ${currentPage === 'explore' ? 'active' : ''}`}
+          onClick={() => setCurrentPage('explore')}
+        >
+          <div className="icon">🔍</div>
+        </div>
+        <div
+          className={`nav-item ${currentPage === 'saved' ? 'active' : ''}`}
+          onClick={() => setCurrentPage('saved')}
+        >
+          <div className="icon">❤️</div>
+        </div>
+        <div
+          className={`nav-item ${currentPage === 'messages' ? 'active' : ''}`}
+          onClick={() => setCurrentPage('messages')}
+        >
+          <div className="icon">💬</div>
+        </div>
+        <div
+          className="nav-item create-btn"
+          onClick={() => setActiveModal('createEvent')}
+        >
+          <div className="icon">➕</div>
+        </div>
+        <div
+          className={`nav-item ${currentPage === 'profile' ? 'active' : ''}`}
+          onClick={() => setCurrentPage('profile')}
+        >
+          <div className="icon">👤</div>
+        </div>
+      </div>
+
+      {activeModal === 'eventDetails' && selectedEvent && (
+        <div
+          className="modal active"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveModal(null);
+          }}
+        >
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>{selectedEvent.title}</h2>
+              <button className="close-btn" onClick={() => setActiveModal(null)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div
+                className="event-page-image"
+                style={{ background: selectedEvent.image }}
+              ></div>
+              <h2>{selectedEvent.title}</h2>
+              <div className="event-meta">
+                <span className="meta-icon">📅</span>
+                {new Date(selectedEvent.date).toLocaleDateString()} at {selectedEvent.time}
+              </div>
+              <div className="event-meta">
+                <span className="meta-icon">📍</span>
+                {selectedEvent.location}
+              </div>
+              <div className="event-meta">
+                <span className="meta-icon">👤</span>
+                {selectedEvent.host}
+              </div>
+              <div className="event-meta">
+                <span className="meta-icon">💰</span>
+                ${selectedEvent.cost}
+              </div>
+              <div className="section">
+                <h3 className="section-title">About</h3>
+                <p>{selectedEvent.description}</p>
+              </div>
+              <div className="section">
+                <h3 className="section-title">Attendees ({selectedEvent.attendees}/{selectedEvent.maxAttendees})</h3>
+                <div className="user-list">
+                  {selectedEvent.attendeesList.map((att, idx) => (
+                    <div key={idx} className="user-item">
+                      <div className="user-avatar">{att.initial}</div>
+                      <div className="user-info">
+                        <div className="user-name">{att.name}</div>
+                        <div className="user-detail">Event attendee</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="action-buttons">
+                <button className="btn btn-secondary">Share</button>
+                <button className="btn btn-success">Join Event</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === 'createEvent' && (
+        <div
+          className="modal active"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveModal(null);
+          }}
+        >
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Create Event</h2>
+              <button className="close-btn" onClick={() => setActiveModal(null)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const newEvent = {
+                    id: events.length + 1,
+                    ...formData,
+                    attendees: 1,
+                    image: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    attendeesList: [],
+                    saved: false,
+                  };
+                  setEvents([...events, newEvent]);
+                  setFormData({
+                    title: '',
+                    category: 'social',
+                    date: '',
+                    time: '',
+                    location: '',
+                    cost: '0',
+                    maxAttendees: '',
+                    description: '',
+                  });
+                  setActiveModal(null);
+                }}
+              >
+                <div className="form-group">
+                  <label>Event Title</label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    required
+                  >
+                    <option value="social">Social</option>
+                    <option value="fitness">Fitness</option>
+                    <option value="creative">Creative</option>
+                    <option value="professional">Professional</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Time</label>
+                  <input
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Location</label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Cost ($)</label>
+                  <input
+                    type="number"
+                    value={formData.cost}
+                    onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Max Attendees</label>
+                  <input
+                    type="number"
+                    value={formData.maxAttendees}
+                    onChange={(e) => setFormData({ ...formData, maxAttendees: e.target.value })}
+                    min="1"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  ></textarea>
+                </div>
+                <div className="form-actions">
+                  <button type="button" className="btn btn-secondary" onClick={() => setActiveModal(null)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-success">
+                    Create
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === 'chat' && (
+        <div className="modal active">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Chat</h2>
+              <button className="close-btn" onClick={() => setActiveModal(null)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="chat-message">
+                <div>
+                  <div className="chat-message-sender">Sarah Mitchell</div>
+                  <div className="chat-message-bubble">Hey! Don't forget about the volleyball game tomorrow!</div>
+                  <div className="chat-message-timestamp">2:30 PM</div>
+                </div>
+              </div>
+              <div className="chat-message me">
+                <div>
+                  <div className="chat-message-bubble">I'll be there! Can't wait!</div>
+                  <div className="chat-message-timestamp">2:31 PM</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
