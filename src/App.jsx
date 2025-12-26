@@ -1213,6 +1213,8 @@ const App = () => {
   const [lightMode, setLightMode] = useState(false);
   const [openToConnections, setOpenToConnections] = useState(true);
   const [badgeBounce, setBadgeBounce] = useState(false);
+  const [matchBadgeHovered, setMatchBadgeHovered] = useState(false);
+  const [matchBadgeBounce, setMatchBadgeBounce] = useState(false);
   const [showAttendeesModal, setShowAttendeesModal] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatInput, setChatInput] = useState("");
@@ -1277,6 +1279,7 @@ const App = () => {
   useEffect(() => {
     if (activeModal === "eventDetails") {
       setBadgeBounce(true);
+      setMatchBadgeHovered(false); // Reset match badge hover state for new event
       const timer = setTimeout(() => {
         setBadgeBounce(false);
       }, 3000); // Stop after 4 seconds
@@ -1284,6 +1287,17 @@ const App = () => {
       return () => clearTimeout(timer);
     }
   }, [activeModal]);
+
+  // Handle match badge bounce on first hover (per event page)
+  const handleNewFriendsHover = () => {
+    if (!matchBadgeHovered) {
+      setMatchBadgeBounce(true);
+      setMatchBadgeHovered(true);
+      setTimeout(() => {
+        setMatchBadgeBounce(false);
+      }, 3000);
+    }
+  };
 
   // Handle event registration
   const handleRegisterEvent = (event) => {
@@ -1999,9 +2013,9 @@ const App = () => {
         >
           <button
             className="theme-toggle"
-            onClick={() => setLightMode(!lightMode)}
+            // onClick={() => setLightMode(!lightMode)}
           >
-            {lightMode ? "🌙" : "☀️"}
+            {/* {lightMode ? "🌙" : "☀️"} */}
           </button>
         </div>
       </div>
@@ -2257,10 +2271,10 @@ const App = () => {
                 </div>
                 {/* New Friends Section - Only show if open to connections */}
                 {openToConnections && (
-                  <div className="luma-section">
+                  <div className="luma-section" onMouseEnter={handleNewFriendsHover}>
                     <div className="luma-section-header">
                       <h3 className="luma-match-title">New Friends</h3>
-                      <div className="luma-match">87% Match</div>
+                      <div className={`luma-match ${matchBadgeBounce ? "bounce" : ""}`}>87% Match</div>
                     </div>
                     <div
                       className="luma-attendees-avatars"

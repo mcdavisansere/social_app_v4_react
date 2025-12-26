@@ -45,15 +45,22 @@ body {
 }
 
 .header {
-  background: var(--bg-secondary);
+  background: transparent;
   color: var(--text-primary);
-  padding: 16px 20px;
+  padding: 1px 20px;
   text-align: center;
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+body.light-mode .header {
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
 .header h1 {
@@ -1608,6 +1615,10 @@ body.light-mode .chat-send-btn:hover:not(:disabled) {
 }
 
 .luma-location-badge.bounce {
+  animation: badgeBounce 0.5s ease-in-out infinite;
+}
+
+.luma-match.bounce {
   animation: badgeBounce 0.5s ease-in-out infinite;
 }
 
