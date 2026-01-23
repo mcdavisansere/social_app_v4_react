@@ -91,12 +91,14 @@ body.light-mode .header {
 
 .filters {
   display: flex;
-  padding: 16px;
+  padding: 16px 15px;
   gap: 8px;
   background: var(--bg-primary);
   overflow-x: auto;
-  transition: background-color 0.3s, border-color 0.3s;
-  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s;
+  margin-left: -15px;
+  margin-right: -15px;
+  scroll-padding-left: 15px;
 }
 
 .filters::-webkit-scrollbar {
@@ -181,9 +183,134 @@ body.light-mode .saved-toggle-btn.active {
   color: white;
 }
 
+.page-header {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
 .explore-feed {
   padding: 15px;
   padding-bottom: 80px;
+}
+
+/* Curated For You Section */
+.curated-section {
+  margin-bottom: 24px;
+}
+
+.curated-header {
+  margin-bottom: 16px;
+}
+
+.curated-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.curated-subtitle {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.curated-cards {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-left: -15px;
+  margin-right: -15px;
+  padding-left: 15px;
+  padding-right: 15px;
+  scroll-padding-left: 15px;
+}
+
+.curated-cards::-webkit-scrollbar {
+  display: none;
+}
+
+.curated-card {
+  flex: 0 0 35%;
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.curated-card:hover {
+  transform: scale(0.98);
+}
+
+.curated-card-image {
+  position: relative;
+  width: 100%;
+  height: 125px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.curated-category-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background-color: rgba(50, 50, 50, 0.8);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+body.light-mode .curated-category-badge {
+  background-color: rgba(240, 240, 240, 0.9);
+  color: #111;
+}
+
+.curated-card-info {
+  padding: 12px 4px;
+}
+
+.curated-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.curated-card-details {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Discover More Header */
+.discover-header {
+  margin-bottom: 16px;
+}
+
+.discover-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.discover-subtitle {
+  font-size: 10px;
+  color: var(--text-secondary);
 }
 
 #eventsList {
@@ -249,12 +376,8 @@ body.light-mode .saved-toggle-btn.active {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -264,40 +387,39 @@ body.light-mode .saved-toggle-btn.active {
 }
 
 .save-btn svg {
-  color: white;
-  stroke: white;
+  color: #f9f9f9;
+  stroke: #f9f9f9;
   transition: all 0.2s;
 }
 
 .save-btn.saved {
-  background-color: white;
+  background: none;
 }
 
 .save-btn.saved svg {
-  color: black;
-  stroke: black;
+  color: #f9f9f9;
+  stroke: #f9f9f9;
 }
 
 body.light-mode .save-btn.saved {
-  background-color: black;
+  background: none;
 }
 
 body.light-mode .save-btn.saved svg {
-  color: white;
-  stroke: white;
+  color: #f9f9f9;
+  stroke: #f9f9f9;
 }
 
 .save-btn:hover {
   transform: scale(1.15);
-  background-color: rgba(0, 0, 0, 0.6);
 }
 
 .save-btn.saved:hover {
-  background-color: #f5f5f5;
+  background: none;
 }
 
 body.light-mode .save-btn.saved:hover {
-  background-color: #1a1a1a;
+  background: none;
 }
 
 .save-btn .count {
@@ -1284,7 +1406,7 @@ body.light-mode .category-tag:hover {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 15px;
+  padding: 15px 0;
   cursor: pointer;
   border-bottom: 1px solid var(--border-color);
   transition: background 0.2s;
@@ -1816,6 +1938,57 @@ body.light-mode .luma-match::after {
 
 .luma-match:hover::after {
   opacity: 1;
+}
+
+/* Friends List Styles */
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.friend-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+}
+
+.friend-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.invite-btn {
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.invite-btn:hover {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
 }
 
 .luma-weather svg {

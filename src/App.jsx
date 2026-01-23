@@ -1157,7 +1157,7 @@ const INITIAL_MESSAGES = [
     time: "2:30 PM",
     unread: 2,
     isGroupChat: false,
-    avatar: null,
+    avatar: "https://i.pravatar.cc/150?img=47",
     chatHistory: [
       {
         sender: "Sarah Mitchell",
@@ -1174,7 +1174,7 @@ const INITIAL_MESSAGES = [
     time: "1:15 PM",
     unread: 0,
     isGroupChat: false,
-    avatar: null,
+    avatar: "https://i.pravatar.cc/150?img=23",
     chatHistory: [
       {
         sender: "Lisa Chen",
@@ -1191,7 +1191,7 @@ const INITIAL_MESSAGES = [
     time: "11:45 AM",
     unread: 1,
     isGroupChat: false,
-    avatar: null,
+    avatar: "https://i.pravatar.cc/150?img=68",
     chatHistory: [
       {
         sender: "David Kim",
@@ -1460,6 +1460,7 @@ const App = () => {
   // Page components
   const renderExplorePage = () => (
     <div id="exploreFeed" className="explore-feed">
+      <h1 className="page-header">Find Your Tribe</h1>
       <div className="filters">
         <button
           className={`filter-btn ${
@@ -1468,6 +1469,12 @@ const App = () => {
           onClick={() => setSelectedCategories([])}
         >
           All
+        </button>
+                <button
+          className="filter-btn"
+          onClick={() => setActiveModal("advancedFilters")}
+        >
+          Filters
         </button>
         {[
           "social",
@@ -1494,13 +1501,13 @@ const App = () => {
             }}
           >
             {cat === "social"
-              ? "Social Butterfly"
+              ? "Social Butterflys"
               : cat === "fitness"
-              ? "Fitness Freak"
+              ? "Fitness Freaks"
               : cat === "creative"
               ? "Creative Enthusiasts"
               : cat === "professional"
-              ? "Professional"
+              ? "Professionals"
               : cat === "foodie"
               ? "For the Foodies"
               : cat === "adrenaline"
@@ -1508,19 +1515,76 @@ const App = () => {
               : cat === "wellness"
               ? "Wellness Warriors"
               : cat === "gaming"
-              ? "Game Night Crew"
+              ? "Game Night Crews"
               : cat === "music"
               ? "Music Lovers"
               : cat.charAt(0).toUpperCase() + cat.slice(1)}
           </button>
         ))}
-        <button
-          className="filter-btn"
-          onClick={() => setActiveModal("advancedFilters")}
-        >
-          Filters
-        </button>
+
       </div>
+
+      {/* Curated For You Section */}
+      <div className="curated-section">
+        <div className="curated-header">
+          <h2 className="curated-title">For You</h2>
+          <p className="curated-subtitle">AI Curated ✨</p>
+        </div>
+        <div className="curated-cards">
+          {events.slice(0, 4).map((event) => (
+            <div
+              key={`curated-${event.id}`}
+              className="curated-card"
+              onClick={() => {
+                setSelectedEvent(event);
+                setActiveModal("eventDetails");
+              }}
+            >
+              <div
+                className="curated-card-image"
+                style={{ backgroundImage: `url(${event.image})` }}
+              >
+                <button
+                  className={`save-btn ${event.saved ? "saved" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEvents(
+                      events.map((ev) =>
+                        ev.id === event.id ? { ...ev, saved: !ev.saved } : ev
+                      )
+                    );
+                  }}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill={event.saved ? "#f9f9f9" : "none"}
+                    stroke="currentColor"
+                    strokeWidth="2"ƒ
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  </svg>
+                </button>
+              </div>
+              <div className="curated-card-info">
+                <div className="curated-card-title">{event.title}</div>
+                <div className="curated-card-details">
+                  {event.date} • {event.location}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="discover-header">
+        <h2 className="discover-title">Try Something New</h2>
+        <p className="discover-subtitle"> Connect & Vibe</p>
+      </div>
+
       <div id="eventsList">
         {filteredEvents.length === 0 ? (
           <div className="empty-state">
@@ -1557,13 +1621,13 @@ const App = () => {
                     width="18"
                     height="18"
                     viewBox="0 0 24 24"
-                    fill="none"
+                    fill={event.saved ? "#f9f9f9" : "none"}
                     stroke="currentColor"
-                    strokeWidth="3"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <polyline points="20 6 9 17 4 12"></polyline>
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                   </svg>
                 </button>
                 <div className="category-badge">
@@ -1758,13 +1822,13 @@ const App = () => {
                     width="18"
                     height="18"
                     viewBox="0 0 24 24"
-                    fill="none"
+                    fill={event.saved ? "#f9f9f9" : "none"}
                     stroke="currentColor"
-                    strokeWidth="3"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <polyline points="20 6 9 17 4 12"></polyline>
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                   </svg>
                 </button>
                 <div className="event-info-image">
@@ -1870,6 +1934,7 @@ const App = () => {
 
   const renderMessagesPage = () => (
     <div id="messagesPage" className="explore-feed">
+      <h1 className="page-header">Connected</h1>
       {messages.length === 0 ? (
         <div className="empty-state">
           <div className="icon">💬</div>
@@ -1886,7 +1951,7 @@ const App = () => {
               setActiveModal("chat");
             }}
           >
-            {msg.isGroupChat && msg.avatar ? (
+            {msg.avatar ? (
               <div
                 className="message-avatar message-avatar-image"
                 style={{
@@ -2002,24 +2067,6 @@ const App = () => {
         `}
       </style>
 
-      <div className="header">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <button
-            className="theme-toggle"
-            // onClick={() => setLightMode(!lightMode)}
-          >
-            {/* {lightMode ? "🌙" : "☀️"} */}
-          </button>
-        </div>
-      </div>
-
       {/* Pages */}
       {currentPage === "explore" && renderExplorePage()}
       {currentPage === "saved" && renderSavedPage()}
@@ -2055,13 +2102,13 @@ const App = () => {
               width="24"
               height="24"
               viewBox="0 0 24 24"
-              fill="none"
+              fill={currentPage === "saved" ? "currentColor" : "none"}
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <polyline points="20 6 9 17 4 12"></polyline>
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
           </div>
         </div>
@@ -2269,6 +2316,54 @@ const App = () => {
                     </div>
                   </div>
                 </div>
+                {/* Old Friends Section */}
+                <div className="luma-section">
+                  <div className="luma-section-header">
+                    <h3 className="luma-match-title">Old Friends</h3>
+                    <div className="luma-match">You know them</div>
+                  </div>
+                  <div className="friends-list">
+                    {selectedEvent.attendeesList.slice(0, 3).map((att, idx) => (
+                      <div key={idx} className="friend-item">
+                        <div className="friend-info">
+                          <div
+                            className="friend-avatar"
+                            style={{
+                              backgroundImage: `url(${att.avatar})`,
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                            }}
+                          ></div>
+                          <span className="friend-name">{att.name}</span>
+                        </div>
+                        <button className="invite-btn">Invite</button>
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className="luma-attendees-avatars"
+                    onClick={() => setShowAttendeesModal(true)}
+                    style={{ cursor: "pointer", marginTop: "12px" }}
+                  >
+                    {selectedEvent.attendeesList.map((att, idx) => (
+                      <div
+                        key={idx}
+                        className="luma-attendee-avatar"
+                        style={{
+                          backgroundImage: `url(${att.avatar})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }}
+                      ></div>
+                    ))}
+                    {selectedEvent.attendees > 3 && (
+                      <div className="luma-attendee-avatar luma-attendee-more">
+                        +{selectedEvent.attendees - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* New Friends Section - Only show if open to connections */}
                 {openToConnections && (
                   <div className="luma-section" onMouseEnter={handleNewFriendsHover}>
@@ -2503,10 +2598,10 @@ const App = () => {
                     }
                     required
                   >
-                    <option value="social">Social</option>
+                    {/* <option value="social">Social</option>
                     <option value="fitness">Fitness</option>
                     <option value="creative">Creative</option>
-                    <option value="professional">Professional</option>
+                    <option value="professional">Professional</option> */}
                   </select>
                 </div>
                 <div className="form-group">
