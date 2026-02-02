@@ -1215,7 +1215,7 @@ const App = () => {
   const [filterTime, setFilterTime] = useState("");
   const [activeModal, setActiveModal] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [lightMode, setLightMode] = useState(false);
+  // const [lightMode, setLightMode] = useState(false);
   const [openToConnections, setOpenToConnections] = useState(true);
   const [badgeBounce, setBadgeBounce] = useState(false);
   const [matchBadgeHovered, setMatchBadgeHovered] = useState(false);
