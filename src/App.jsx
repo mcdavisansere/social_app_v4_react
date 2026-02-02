@@ -1527,8 +1527,8 @@ const App = () => {
       {/* Curated For You Section */}
       <div className="curated-section">
         <div className="curated-header">
-          <h2 className="curated-title">For You</h2>
-          <p className="curated-subtitle">AI Curated ✨</p>
+          <h2 className="curated-title">For You  ✨</h2>
+          {/* <p className="curated-subtitle"> </p> */}
         </div>
         <div className="curated-cards">
           {events.slice(0, 4).map((event) => (
@@ -1582,7 +1582,6 @@ const App = () => {
 
       <div className="discover-header">
         <h2 className="discover-title">Try Something New</h2>
-        <p className="discover-subtitle"> Connect & Vibe</p>
       </div>
 
       <div id="eventsList">
