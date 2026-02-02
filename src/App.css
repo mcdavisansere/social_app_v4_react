@@ -7,7 +7,7 @@
   --border-color: #2a2a2a;
   --card-bg: #1a1a1a;
   --modal-bg: #1a1a1a;
-  --accent: #FAEBD7;
+  --accent: #faebd7;
 }
 
 body.light-mode {
@@ -19,7 +19,7 @@ body.light-mode {
   --border-color: #e0e0e0;
   --card-bg: #ffffff;
   --modal-bg: #ffffff;
-  --accent: #FAEBD7;
+  --accent: #faebd7;
 }
 
 * {
@@ -29,10 +29,13 @@ body.light-mode {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 .container {
@@ -133,6 +136,139 @@ body.light-mode .filter-btn.active {
   background: black;
   color: white;
   border-color: black;
+}
+
+/* Advanced Filters Modal */
+.advanced-filters-modal {
+  height: auto;
+  max-height: 85vh;
+  top: auto;
+  bottom: 0;
+  border-radius: 20px 20px 0 0;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.filter-options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-option-btn {
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.filter-option-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-tertiary);
+}
+
+.filter-option-btn.active {
+  background: white;
+  color: black;
+  border-color: white;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.filter-input:focus {
+  border-color: var(--accent);
+}
+
+.filter-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.filter-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+
+body.light-mode .filter-input::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+body.light-mode .filter-option-btn.active {
+  background: black;
+  color: white;
+  border-color: black;
+}
+
+.filter-modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.filter-clear-btn {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.filter-clear-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.filter-apply-btn {
+  flex: 2;
+  padding: 14px;
+  border: none;
+  background: rgba(255, 255, 255, 1);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  color: black;
+  transition: all 0.2s ease;
+}
+
+.filter-apply-btn:hover {
+  opacity: 0.9;
 }
 
 .saved-page-toggle {
@@ -609,7 +745,10 @@ body.light-mode .save-btn.saved:hover {
   display: flex;
   justify-content: around;
   padding: 5px;
-  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
   backdrop-filter: blur(10px);
   border-radius: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -733,7 +872,9 @@ body.light-mode .nav-item.active {
   max-height: 100vh;
   overflow-y: hidden;
   border: none;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
   opacity: 1 !important;
   display: flex;
   flex-direction: column;
@@ -746,7 +887,9 @@ body.light-mode .nav-item.active {
   justify-content: space-between;
   align-items: center;
   color: var(--text-primary);
-  transition: color 0.3s, border-color 0.3s;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
   background: var(--bg-secondary);
   flex-shrink: 0;
   z-index: 10;
@@ -763,7 +906,8 @@ body.light-mode .nav-item.active {
   color: var(--text-primary);
   transition: color 0.3s;
   background: var(--bg-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .modal-body-scrollable {
@@ -776,7 +920,8 @@ body.light-mode .nav-item.active {
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 3px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -794,7 +939,8 @@ body.light-mode .nav-item.active {
   margin-bottom: 15px;
   color: var(--text-primary);
   transition: color 0.3s;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .close-btn {
@@ -1745,7 +1891,8 @@ body.light-mode .chat-send-btn:hover:not(:disabled) {
 }
 
 @keyframes badgeBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -1851,7 +1998,6 @@ body.light-mode .luma-btn-primary {
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
-
 
 .luma-section-header {
   display: flex;
@@ -2005,16 +2151,17 @@ body.light-mode .luma-match::after {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background-image: linear-gradient(
-      45deg,
-      var(--border-color) 25%,
-      transparent 25%
-    ),
+  background-image:
+    linear-gradient(45deg, var(--border-color) 25%, transparent 25%),
     linear-gradient(-45deg, var(--border-color) 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, var(--border-color) 75%),
     linear-gradient(-45deg, transparent 75%, var(--border-color) 75%);
   background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0px;
 }
 
 .map-marker {

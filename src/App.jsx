@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+// import { NextResponse } from 'next/server';
 import "./App.css";
 
 // Sample event data
@@ -1208,6 +1209,10 @@ const App = () => {
   const [events, setEvents] = useState(INITIAL_EVENTS);
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [filterKeyword, setFilterKeyword] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [filterTime, setFilterTime] = useState("");
   const [activeModal, setActiveModal] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [lightMode, setLightMode] = useState(false);
@@ -1237,6 +1242,23 @@ const App = () => {
       !selectedCategories.includes(event.category)
     ) {
       return false;
+    }
+    if (filterKeyword) {
+      const kw = filterKeyword.toLowerCase();
+      const matchesKeyword =
+        event.title.toLowerCase().includes(kw) ||
+        (event.description && event.description.toLowerCase().includes(kw));
+      if (!matchesKeyword) return false;
+    }
+    if (filterLocation) {
+      if (!event.location.toLowerCase().includes(filterLocation.toLowerCase()))
+        return false;
+    }
+    if (filterDate) {
+      if (event.date !== filterDate) return false;
+    }
+    if (filterTime) {
+      if (event.time < filterTime) return false;
     }
     return true;
   });
@@ -1382,8 +1404,13 @@ const App = () => {
     if (updatedChat) {
       setSelectedChat(updatedChat);
     }
+    
+    const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+    if (!apiKey) {
+      console.error("OpenAI API key not configured. Set REACT_APP_OPENAI_API_KEY in your .env file.");
+      return;
+    }
 
-    // Call OpenAI API for AI response
     try {
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
@@ -1391,8 +1418,7 @@ const App = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization:
-              "Bearer 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", // Replace with your actual OpenAI API key
+            Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
             model: "gpt-3.5-turbo",
@@ -2751,6 +2777,124 @@ const App = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "advancedFilters" && (
+        <div
+          id="advancedFiltersModal"
+          className="modal active"
+          onClick={(e) => {
+            if (e.target.id === "advancedFiltersModal") setActiveModal(null);
+          }}
+        >
+          <div className="modal-content advanced-filters-modal">
+            <div className="modal-header">
+              <h2>Filters</h2>
+              <button
+                className="close-btn"
+                onClick={() => setActiveModal(null)}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body modal-body-scrollable">
+              <div className="filter-section">
+                <h3 className="filter-section-title">Categories</h3>
+                <div className="filter-options-grid">
+                  {[
+                    { key: "social", label: "Social Butterflys" },
+                    { key: "fitness", label: "Fitness Freaks" },
+                    { key: "creative", label: "Creative Enthusiasts" },
+                    { key: "professional", label: "Professionals" },
+                    { key: "foodie", label: "For the Foodies" },
+                    { key: "adrenaline", label: "Adrenaline Junkies" },
+                    { key: "wellness", label: "Wellness Warriors" },
+                    { key: "gaming", label: "Game Night Crews" },
+                    { key: "music", label: "Music Lovers" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.key}
+                      className={`filter-option-btn ${
+                        selectedCategories.includes(cat.key) ? "active" : ""
+                      }`}
+                      onClick={() => {
+                        setSelectedCategories((prev) =>
+                          prev.includes(cat.key)
+                            ? prev.filter((c) => c !== cat.key)
+                            : [...prev, cat.key]
+                        );
+                      }}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="filter-section">
+                <h3 className="filter-section-title">Keyword</h3>
+                <input
+                  type="text"
+                  className="filter-input"
+                  placeholder="Search by title or description..."
+                  value={filterKeyword}
+                  onChange={(e) => setFilterKeyword(e.target.value)}
+                />
+              </div>
+
+              <div className="filter-section">
+                <h3 className="filter-section-title">Location</h3>
+                <input
+                  type="text"
+                  className="filter-input"
+                  placeholder="Search by location..."
+                  value={filterLocation}
+                  onChange={(e) => setFilterLocation(e.target.value)}
+                />
+              </div>
+
+              <div className="filter-section">
+                <h3 className="filter-section-title">Date</h3>
+                <input
+                  type="date"
+                  className="filter-input"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              </div>
+
+              <div className="filter-section">
+                <h3 className="filter-section-title">Time (from)</h3>
+                <input
+                  type="time"
+                  className="filter-input"
+                  value={filterTime}
+                  onChange={(e) => setFilterTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="filter-modal-footer">
+              <button
+                className="filter-clear-btn"
+                onClick={() => {
+                  setSelectedCategories([]);
+                  setFilterKeyword("");
+                  setFilterLocation("");
+                  setFilterDate("");
+                  setFilterTime("");
+                }}
+              >
+                Clear All
+              </button>
+              <button
+                className="filter-apply-btn"
+                onClick={() => setActiveModal(null)}
+              >
+                Show Results
+              </button>
             </div>
           </div>
         </div>
