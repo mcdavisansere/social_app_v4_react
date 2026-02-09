@@ -1235,6 +1235,19 @@ const App = () => {
     description: "",
   });
 
+  // Speed Run state
+  const [speedRunActive, setSpeedRunActive] = useState(false);
+  const [speedRunCards, setSpeedRunCards] = useState([]);
+  const [speedRunIndex, setSpeedRunIndex] = useState(0);
+  const [speedRunDragX, setSpeedRunDragX] = useState(0);
+  const [speedRunDragY, setSpeedRunDragY] = useState(0);
+  const [speedRunDragging, setSpeedRunDragging] = useState(false);
+  const [speedRunStartX, setSpeedRunStartX] = useState(0);
+  const [speedRunStartY, setSpeedRunStartY] = useState(0);
+  const [speedRunExiting, setSpeedRunExiting] = useState(null);
+  const [speedRunComplete, setSpeedRunComplete] = useState(false);
+  const [speedRunSavedCount, setSpeedRunSavedCount] = useState(0);
+
   // Filter logic
   const filteredEvents = events.filter((event) => {
     if (
@@ -1483,11 +1496,282 @@ const App = () => {
     }
   };
 
+  // Speed Run functions
+  const startSpeedRun = () => {
+    const shuffled = [...events];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const selected = shuffled.slice(0, Math.min(8, shuffled.length));
+    setSpeedRunCards(selected);
+    setSpeedRunIndex(0);
+    setSpeedRunDragX(0);
+    setSpeedRunDragY(0);
+    setSpeedRunDragging(false);
+    setSpeedRunExiting(null);
+    setSpeedRunComplete(false);
+    setSpeedRunSavedCount(0);
+    setSpeedRunActive(true);
+  };
+
+  const exitSpeedRun = () => {
+    setSpeedRunActive(false);
+    setSpeedRunCards([]);
+    setSpeedRunIndex(0);
+    setSpeedRunComplete(false);
+  };
+
+  const handleSpeedRunPointerDown = (e) => {
+    e.target.setPointerCapture(e.pointerId);
+    setSpeedRunDragging(true);
+    setSpeedRunStartX(e.clientX);
+    setSpeedRunStartY(e.clientY);
+    setSpeedRunDragX(0);
+    setSpeedRunDragY(0);
+  };
+
+  const handleSpeedRunPointerMove = (e) => {
+    if (!speedRunDragging) return;
+    setSpeedRunDragX(e.clientX - speedRunStartX);
+    setSpeedRunDragY(e.clientY - speedRunStartY);
+  };
+
+  const triggerSpeedRunSwipe = (direction) => {
+    const currentEvent = speedRunCards[speedRunIndex];
+
+    if (direction === "right") {
+      setEvents((prev) =>
+        prev.map((ev) =>
+          ev.id === currentEvent.id ? { ...ev, saved: true } : ev
+        )
+      );
+      setSpeedRunSavedCount((prev) => prev + 1);
+    }
+
+    setSpeedRunExiting(direction);
+
+    setTimeout(() => {
+      setSpeedRunExiting(null);
+      setSpeedRunDragX(0);
+      setSpeedRunDragY(0);
+
+      setSpeedRunIndex((prev) => {
+        if (prev + 1 >= speedRunCards.length) {
+          setSpeedRunComplete(true);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 300);
+  };
+
+  const handleSpeedRunPointerUp = () => {
+    if (!speedRunDragging) return;
+    setSpeedRunDragging(false);
+
+    const SWIPE_THRESHOLD = 100;
+    if (speedRunDragX > SWIPE_THRESHOLD) {
+      triggerSpeedRunSwipe("right");
+    } else if (speedRunDragX < -SWIPE_THRESHOLD) {
+      triggerSpeedRunSwipe("left");
+    } else {
+      setSpeedRunDragX(0);
+      setSpeedRunDragY(0);
+    }
+  };
+
+  const handleSpeedRunReject = () => {
+    if (speedRunExiting || speedRunComplete) return;
+    triggerSpeedRunSwipe("left");
+  };
+
+  const handleSpeedRunSave = () => {
+    if (speedRunExiting || speedRunComplete) return;
+    triggerSpeedRunSwipe("right");
+  };
+
+  // Speed Run render
+  const renderSpeedRun = () => {
+    if (speedRunComplete) {
+      return (
+        <div className="speed-run-container">
+          <div className="speed-run-complete">
+            <div className="speed-run-complete-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <h2 className="speed-run-complete-title">Speed Run Complete!</h2>
+            <p className="speed-run-complete-subtitle">
+              You saved {speedRunSavedCount} event{speedRunSavedCount !== 1 ? "s" : ""}
+            </p>
+            <div className="speed-run-complete-actions">
+              <button
+                className="speed-run-btn-primary"
+                onClick={() => {
+                  setSpeedRunActive(false);
+                  setCurrentPage("saved");
+                  setSavedPageTab("saved");
+                }}
+              >
+                View Saved Events
+              </button>
+              <button
+                className="speed-run-btn-secondary"
+                onClick={startSpeedRun}
+              >
+                Play Again
+              </button>
+              <button
+                className="speed-run-btn-tertiary"
+                onClick={exitSpeedRun}
+              >
+                Back to Explore
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const currentCard = speedRunCards[speedRunIndex];
+    const nextCard = speedRunIndex + 1 < speedRunCards.length ? speedRunCards[speedRunIndex + 1] : null;
+
+    let cardTransform = "";
+    let cardTransition = "transform 0.3s ease-out";
+
+    if (speedRunExiting) {
+      cardTransform = `translateX(${speedRunExiting === "right" ? 600 : -600}px) rotate(${speedRunExiting === "right" ? 30 : -30}deg)`;
+      cardTransition = "transform 0.3s ease-out, opacity 0.3s ease-out";
+    } else if (speedRunDragging) {
+      cardTransform = `translateX(${speedRunDragX}px) rotate(${speedRunDragX * 0.05}deg)`;
+      cardTransition = "none";
+    }
+
+    const likeOpacity = Math.min(Math.max(speedRunDragX / 100, 0), 1);
+    const nopeOpacity = Math.min(Math.max(-speedRunDragX / 100, 0), 1);
+
+    return (
+      <div className="speed-run-container">
+        <div className="speed-run-header">
+          <button className="speed-run-close" onClick={exitSpeedRun}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <div className="speed-run-progress">
+            <div className="speed-run-progress-text">
+              {speedRunIndex + 1} / {speedRunCards.length}
+            </div>
+            <div className="speed-run-progress-bar">
+              <div
+                className="speed-run-progress-fill"
+                style={{ width: `${(speedRunIndex / speedRunCards.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="speed-run-stack">
+          {nextCard && (
+            <div
+              className="speed-run-card speed-run-card-next"
+              style={{ backgroundImage: `url(${nextCard.image})` }}
+            >
+              <div className="speed-run-card-gradient">
+                <div className="speed-run-card-info">
+                  <div className="speed-run-card-category">{nextCard.category}</div>
+                  <h3 className="speed-run-card-title">{nextCard.title}</h3>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div
+            className="speed-run-card speed-run-card-current"
+            style={{
+              backgroundImage: `url(${currentCard.image})`,
+              transform: cardTransform,
+              transition: cardTransition,
+            }}
+            onPointerDown={handleSpeedRunPointerDown}
+            onPointerMove={handleSpeedRunPointerMove}
+            onPointerUp={handleSpeedRunPointerUp}
+          >
+            <div
+              className="speed-run-overlay speed-run-overlay-nope"
+              style={{ opacity: nopeOpacity }}
+            >
+              NOPE
+            </div>
+            <div
+              className="speed-run-overlay speed-run-overlay-like"
+              style={{ opacity: likeOpacity }}
+            >
+              LIKE
+            </div>
+            <div className="speed-run-card-gradient">
+              <div className="speed-run-card-info">
+                <div className="speed-run-card-category">{currentCard.category}</div>
+                <h3 className="speed-run-card-title">{currentCard.title}</h3>
+                <p className="speed-run-card-detail">
+                  {new Date(currentCard.date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}{" "}
+                  at {currentCard.time}
+                </p>
+                <p className="speed-run-card-detail">{currentCard.location}</p>
+                <p className="speed-run-card-detail">
+                  {currentCard.cost === 0 ? "Free" : `$${currentCard.cost}`} &middot;{" "}
+                  {currentCard.attendees}/{currentCard.maxAttendees} going
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="speed-run-actions">
+          <button
+            className="speed-run-action-btn speed-run-action-reject"
+            onClick={handleSpeedRunReject}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <button
+            className="speed-run-action-btn speed-run-action-save"
+            onClick={handleSpeedRunSave}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // Page components
-  const renderExplorePage = () => (
+  const renderExplorePage = () => {
+    if (speedRunActive) {
+      return renderSpeedRun();
+    }
+    return (
     <div id="exploreFeed" className="explore-feed">
       <h1 className="page-header">Find Your Tribe</h1>
       <div className="filters">
+        <button
+          className="filter-btn speed-run-trigger"
+          onClick={startSpeedRun}
+        >
+          Speed Run
+        </button>
         <button
           className={`filter-btn ${
             selectedCategories.length === 0 ? "active" : ""
@@ -1763,7 +2047,8 @@ const App = () => {
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   const renderSavedPage = () => (
     <div className="explore-feed">
