@@ -2370,3 +2370,144 @@ body.light-mode .luma-floating-register:hover {
 .modal-content.luma-style .modal-body-scrollable {
   padding-bottom: 100px;
 }
+
+/* Sign In Screen */
+.sign-in-wrapper {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  padding: 20px;
+}
+
+.sign-in-container {
+  width: 100%;
+  max-width: 380px;
+}
+
+.sign-in-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.sign-in-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 20px;
+}
+
+.sign-in-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.sign-in-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.sign-in-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sign-in-error {
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #ef4444;
+  font-size: 14px;
+  text-align: center;
+}
+
+.sign-in-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sign-in-field label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sign-in-field input {
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 15px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.sign-in-field input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.sign-in-field input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.sign-in-btn {
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  color: black;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+body.light-mode .sign-in-btn {
+  background: black;
+  color: white;
+}
+
+.sign-in-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.sign-in-btn:active {
+  transform: translateY(0);
+}
+
+.sign-in-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.sign-in-link {
+  color: #667eea;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sign-in-link:hover {
+  text-decoration: underline;
+}

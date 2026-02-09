@@ -1205,6 +1205,22 @@ const INITIAL_MESSAGES = [
 ];
 
 const App = () => {
+  // Auth state
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [signInUsername, setSignInUsername] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
+  const [signInError, setSignInError] = useState("");
+
+  const handleSignIn = (e) => {
+    e.preventDefault();
+    if (!signInUsername.trim() || !signInPassword.trim()) {
+      setSignInError("Please enter both username and password");
+      return;
+    }
+    setSignInError("");
+    setIsSignedIn(true);
+  };
+
   const [currentPage, setCurrentPage] = useState("explore");
   const [events, setEvents] = useState(INITIAL_EVENTS);
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
@@ -2357,6 +2373,52 @@ const App = () => {
       </div>
     </div>
   );
+
+  if (!isSignedIn) {
+    return (
+      <div className="sign-in-wrapper">
+        <div className="sign-in-container">
+          <div className="sign-in-header">
+            <div className="sign-in-logo">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <h1 className="sign-in-title">EventHub</h1>
+            <p className="sign-in-subtitle">Discover events. Find your tribe.</p>
+          </div>
+          <form className="sign-in-form" onSubmit={handleSignIn}>
+            {signInError && <div className="sign-in-error">{signInError}</div>}
+            <div className="sign-in-field">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={signInUsername}
+                onChange={(e) => setSignInUsername(e.target.value)}
+                autoComplete="username"
+              />
+            </div>
+            <div className="sign-in-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={signInPassword}
+                onChange={(e) => setSignInPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <button type="submit" className="sign-in-btn">Sign In</button>
+          </form>
+          <p className="sign-in-footer">Don't have an account? <span className="sign-in-link">Sign Up</span></p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`container ${lightMode ? "light-mode" : ""}`}>
