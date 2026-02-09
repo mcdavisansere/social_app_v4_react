@@ -1718,16 +1718,7 @@ const App = () => {
                 <div className="speed-run-card-category">{currentCard.category}</div>
                 <h3 className="speed-run-card-title">{currentCard.title}</h3>
                 <p className="speed-run-card-detail">
-                  {new Date(currentCard.date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}{" "}
-                  at {currentCard.time}
-                </p>
-                <p className="speed-run-card-detail">{currentCard.location}</p>
-                <p className="speed-run-card-detail">
-                  {currentCard.cost === 0 ? "Free" : `$${currentCard.cost}`} &middot;{" "}
-                  {currentCard.attendees}/{currentCard.maxAttendees} going
+                  {new Date(currentCard.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })} &middot; {currentCard.location} &middot; {currentCard.cost === 0 ? "Free" : `$${currentCard.cost}`}
                 </p>
               </div>
             </div>
