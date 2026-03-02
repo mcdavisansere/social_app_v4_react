@@ -2726,16 +2726,26 @@ body.light-mode .sign-in-btn {
 
 /* ========== Speed Run ========== */
 .speed-run-trigger {
-  background: white;
-  color: black;
-  border-color: white;
-  font-weight: 600;
+  background: linear-gradient(135deg, #7c6fe0 0%, #6a5fd8 100%);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(108, 92, 231, 0.45);
+  border-radius: 999px;
+  padding: 10px 22px;
+}
+
+.speed-run-trigger:hover {
+  background: linear-gradient(135deg, #8b7fe8 0%, #7b6fe0 100%);
+  border-color: transparent;
+  box-shadow: 0 4px 18px rgba(108, 92, 231, 0.55);
+  transform: translateY(-1px);
 }
 
 body.light-mode .speed-run-trigger {
-  background: black;
-  color: white;
-  border-color: black;
+  background: linear-gradient(135deg, #7c6fe0 0%, #6a5fd8 100%);
+  color: #fff;
+  border-color: transparent;
 }
 
 .speed-run-container {
