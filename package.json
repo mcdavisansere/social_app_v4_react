@@ -1,8 +1,8 @@
 {
-  "name": "eventhub",
+  "name": "niche",
   "version": "1.0.0",
   "private": true,
-  "description": "EventHub - Social Event Discovery App",
+  "description": "Niche - Social Event Discovery App",
   "scripts": {
     "start": "react-scripts start",
     "build": "CI=false react-scripts build",

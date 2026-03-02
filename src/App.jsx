@@ -1204,6 +1204,11 @@ const INITIAL_MESSAGES = [
   },
 ];
 
+const getImageStyle = (image) =>
+  image && image.startsWith("http")
+    ? { backgroundImage: `url(${image})` }
+    : { background: image };
+
 const App = () => {
   // Auth state
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -1249,7 +1254,12 @@ const App = () => {
     cost: "0",
     maxAttendees: "",
     description: "",
+    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    imageUrl: "",
   });
+
+  const [formUrl, setFormUrl] = useState("");
+  const [formFetching, setFormFetching] = useState(false);
 
   // Speed Run state
   const [speedRunActive, setSpeedRunActive] = useState(false);
@@ -1263,6 +1273,7 @@ const App = () => {
   const [speedRunExiting, setSpeedRunExiting] = useState(null);
   const [speedRunComplete, setSpeedRunComplete] = useState(false);
   const [speedRunSavedCount, setSpeedRunSavedCount] = useState(0);
+  const [speedRunShowTutorial, setSpeedRunShowTutorial] = useState(false);
 
   // Filter logic
   const filteredEvents = events.filter((event) => {
@@ -1454,7 +1465,7 @@ const App = () => {
             messages: [
               {
                 role: "system",
-                content: `You are ${selectedChat.name}, a real person chatting with a friend on EventHub, a social event discovery app. Respond naturally as this person would - be friendly, conversational, and authentic. Talk about events, activities, and social plans. Keep responses casual and brief, like a real text conversation. Use a warm, personable tone.`,
+                content: `You are ${selectedChat.name}, a real person chatting with a friend on Niche, a social event discovery app. Respond naturally as this person would - be friendly, conversational, and authentic. Talk about events, activities, and social plans. Keep responses casual and brief, like a real text conversation. Use a warm, personable tone.`,
               },
               {
                 role: "user",
@@ -1528,6 +1539,11 @@ const App = () => {
     setSpeedRunExiting(null);
     setSpeedRunComplete(false);
     setSpeedRunSavedCount(0);
+    if (!localStorage.getItem('speedRunTutorialSeen')) {
+      localStorage.setItem('speedRunTutorialSeen', 'true');
+      setSpeedRunShowTutorial(true);
+      setTimeout(() => setSpeedRunShowTutorial(false), 2600);
+    }
     setSpeedRunActive(true);
   };
 
@@ -1536,6 +1552,7 @@ const App = () => {
     setSpeedRunCards([]);
     setSpeedRunIndex(0);
     setSpeedRunComplete(false);
+    setSpeedRunShowTutorial(false);
   };
 
   const handleSpeedRunPointerDown = (e) => {
@@ -1597,14 +1614,113 @@ const App = () => {
     }
   };
 
-  const handleSpeedRunReject = () => {
-    if (speedRunExiting || speedRunComplete) return;
-    triggerSpeedRunSwipe("left");
-  };
+  // Find event from URL — Layer 1: Microlink for image/metadata, Layer 2: GPT with URL+context
+  const handleFindEvent = async () => {
+    if (!formUrl.trim()) return;
+    setFormFetching(true);
 
-  const handleSpeedRunSave = () => {
-    if (speedRunExiting || speedRunComplete) return;
-    triggerSpeedRunSwipe("right");
+    let imageUrl = "";
+    let pageTitle = "";
+    let pageDate = "";
+    let pageDescription = "";
+
+    // Layer 1: Microlink — works for Luma, Partiful, and pages with good OG tags.
+    // Eventbrite blocks it, so we treat a slug-like title as a failure.
+    try {
+      const microRes = await fetch(
+        `https://api.microlink.io/?url=${encodeURIComponent(formUrl.trim())}`
+      );
+      if (microRes.ok) {
+        const microData = await microRes.json();
+        const pageData = microData.data || {};
+        console.log("Microlink pageData:", pageData);
+        imageUrl = pageData.image?.url || "";
+        const rawTitle = pageData.title || "";
+        // Reject slug-like titles (no spaces, only lowercase + hyphens + digits)
+        const isSlug = rawTitle && !/\s/.test(rawTitle) && /^[a-z0-9-]+$/.test(rawTitle);
+        pageTitle = isSlug ? "" : rawTitle;
+        pageDate = pageData.date ? pageData.date.slice(0, 10) : "";
+        pageDescription = pageData.description || "";
+      }
+    } catch {
+      // Microlink failed — continue to GPT layer
+    }
+
+    // Layer 2: GPT — always runs. Context = URL slug + whatever Microlink found.
+    // GPT can infer title/location from the URL slug even when scraping is blocked.
+    const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+    if (apiKey) {
+      const context = [
+        `URL: ${formUrl.trim()}`,
+        pageTitle && `Title: ${pageTitle}`,
+        pageDescription && `Description: ${pageDescription}`,
+      ].filter(Boolean).join("\n");
+
+      try {
+        const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Extract event details from the URL and any additional context. The URL slug often contains the event name and city — use it to infer title and location when other info is missing. Return ONLY a valid JSON object with: title (string), date (YYYY-MM-DD or empty string), time (HH:MM 24-hour or empty string), location (venue/city as one string, or empty string), cost (number — 0 if free, or empty string). No markdown, no explanation.",
+              },
+              { role: "user", content: context },
+            ],
+            max_tokens: 200,
+            temperature: 0,
+          }),
+        });
+
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          const raw = aiData.choices[0].message.content.trim();
+          try {
+            const ex = JSON.parse(raw);
+            setFormData((prev) => ({
+              ...prev,
+              title: ex.title || pageTitle || prev.title,
+              date: ex.date || pageDate || prev.date,
+              time: ex.time || prev.time,
+              location: ex.location || prev.location,
+              cost: ex.cost !== "" && ex.cost !== undefined ? String(ex.cost) : prev.cost,
+              imageUrl: imageUrl || prev.imageUrl,
+            }));
+          } catch {
+            setFormData((prev) => ({
+              ...prev,
+              title: pageTitle || prev.title,
+              date: pageDate || prev.date,
+              imageUrl: imageUrl || prev.imageUrl,
+            }));
+          }
+        }
+      } catch (err) {
+        console.error("GPT extraction failed:", err);
+        // Still apply whatever Microlink gave us
+        setFormData((prev) => ({
+          ...prev,
+          title: pageTitle || prev.title,
+          date: pageDate || prev.date,
+          imageUrl: imageUrl || prev.imageUrl,
+        }));
+      }
+    } else if (pageTitle || imageUrl) {
+      setFormData((prev) => ({
+        ...prev,
+        title: pageTitle || prev.title,
+        date: pageDate || prev.date,
+        imageUrl: imageUrl || prev.imageUrl,
+      }));
+    }
+
+    setFormFetching(false);
   };
 
   // Speed Run render
@@ -1695,7 +1811,7 @@ const App = () => {
           {nextCard && (
             <div
               className="speed-run-card speed-run-card-next"
-              style={{ backgroundImage: `url(${nextCard.image})` }}
+              style={getImageStyle(nextCard.image)}
             >
               <div className="speed-run-card-gradient">
                 <div className="speed-run-card-info">
@@ -1709,7 +1825,7 @@ const App = () => {
           <div
             className="speed-run-card speed-run-card-current"
             style={{
-              backgroundImage: `url(${currentCard.image})`,
+              ...getImageStyle(currentCard.image),
               transform: cardTransform,
               transition: cardTransition,
             }}
@@ -1750,25 +1866,19 @@ const App = () => {
           </div>
         </div>
 
-        <div className="speed-run-actions">
-          <button
-            className="speed-run-action-btn speed-run-action-reject"
-            onClick={handleSpeedRunReject}
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-          <button
-            className="speed-run-action-btn speed-run-action-save"
-            onClick={handleSpeedRunSave}
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-            </svg>
-          </button>
-        </div>
+        {speedRunShowTutorial && (
+          <div className="speed-run-tutorial-overlay">
+            <div className="speed-run-tutorial-demo-card">
+              <div className="speed-run-tutorial-badge speed-run-tutorial-badge-nope">Not Interested</div>
+              <div className="speed-run-tutorial-badge speed-run-tutorial-badge-like">Interested</div>
+            </div>
+            <div className="speed-run-tutorial-hints">
+              <span className="speed-run-tutorial-hint-left">← Not Interested</span>
+              <span className="speed-run-tutorial-hint-right">Interested →</span>
+            </div>
+            <p className="speed-run-tutorial-text">Swipe cards to decide</p>
+          </div>
+        )}
       </div>
     );
   };
@@ -1868,7 +1978,7 @@ const App = () => {
             >
               <div
                 className="curated-card-image"
-                style={{ backgroundImage: `url(${event.image})` }}
+                style={getImageStyle(event.image)}
               >
                 <button
                   className={`save-btn ${event.saved ? "saved" : ""}`}
@@ -1929,7 +2039,7 @@ const App = () => {
             >
               <div
                 className="event-card-image"
-                style={{ backgroundImage: `url(${event.image})` }}
+                style={getImageStyle(event.image)}
               >
                 <button
                   className={`save-btn ${event.saved ? "saved" : ""}`}
@@ -2131,7 +2241,7 @@ const App = () => {
             >
               <div
                 className="event-card-image"
-                style={{ backgroundImage: `url(${event.image})` }}
+                style={getImageStyle(event.image)}
               >
                 <button
                   className={`save-btn ${event.saved ? "saved" : ""}`}
@@ -2385,8 +2495,8 @@ const App = () => {
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
             </div>
-            <h1 className="sign-in-title">EventHub</h1>
-            <p className="sign-in-subtitle">Discover events. Find your tribe.</p>
+            <h1 className="sign-in-title">Niche</h1>
+            <p className="sign-in-subtitle">Discover activities. Find your tribe.</p>
           </div>
           <form className="sign-in-form" onSubmit={handleSignIn}>
             {signInError && <div className="sign-in-error">{signInError}</div>}
@@ -2395,7 +2505,7 @@ const App = () => {
               <input
                 id="username"
                 type="text"
-                placeholder="Enter your username"
+                placeholder=""
                 value={signInUsername}
                 onChange={(e) => setSignInUsername(e.target.value)}
                 autoComplete="username"
@@ -2406,7 +2516,7 @@ const App = () => {
               <input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder=""
                 value={signInPassword}
                 onChange={(e) => setSignInPassword(e.target.value)}
                 autoComplete="current-password"
@@ -2555,7 +2665,7 @@ const App = () => {
               {/* Hero Image with Back Button */}
               <div
                 className="luma-hero-image"
-                style={{ backgroundImage: `url(${selectedEvent.image})` }}
+                style={getImageStyle(selectedEvent.image)}
               >
                 <button
                   className="luma-back-btn"
@@ -2912,31 +3022,206 @@ const App = () => {
             if (e.target.id === "createEventModal") setActiveModal(null);
           }}
         >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Create Event</h2>
-              <button
-                className="close-btn"
-                onClick={() => setActiveModal(null)}
+          <div className="modal-content luma-style">
+            <div className="modal-body modal-body-scrollable">
+              {/* Hero: shows fetched image or gradient picker */}
+              <div
+                className="luma-hero-image create-event-hero"
+                style={formData.imageUrl
+                  ? { backgroundImage: `url(${formData.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+                  : { background: formData.gradient }}
               >
-                ×
-              </button>
+                <button className="luma-back-btn" onClick={() => setActiveModal(null)}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                {!formData.imageUrl && (
+                  <div className="create-event-gradients">
+                    {[
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                      "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                      "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                      "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+                      "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+                    ].map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        className={`create-event-gradient-swatch${formData.gradient === g ? " active" : ""}`}
+                        style={{ background: g }}
+                        onClick={() => setFormData({ ...formData, gradient: g })}
+                      />
+                    ))}
+                  </div>
+                )}
+                {formData.imageUrl && (
+                  <button
+                    type="button"
+                    className="create-event-clear-img"
+                    onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                  >
+                    ✕ Remove
+                  </button>
+                )}
+              </div>
+
+              <div className="luma-content">
+                {/* URL import row */}
+                <div className="create-event-url-row">
+                  <input
+                    className="create-event-input create-event-url-input"
+                    type="url"
+                    placeholder="Auto-fill with link"
+                    value={formUrl}
+                    onChange={(e) => setFormUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleFindEvent(); }}
+                  />
+                  <button
+                    type="button"
+                    className="create-event-find-btn"
+                    onClick={handleFindEvent}
+                    disabled={!formUrl.trim() || formFetching}
+                  >
+                    {formFetching ? (
+                      <span className="create-event-spinner" />
+                    ) : (
+                      "Find"
+                    )}
+                  </button>
+                </div>
+
+                {/* Category chips */}
+                <div className="create-event-category-chips">
+                  {["social", "fitness", "creative", "professional", "foodie"].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      className={`create-event-chip${formData.category === cat ? " active" : ""}`}
+                      onClick={() => setFormData({ ...formData, category: cat })}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Title */}
+                <input
+                  className="create-event-title-input"
+                  type="text"
+                  placeholder="Event name..."
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                />
+
+                {/* When */}
+                <div className="luma-section">
+                  <h3 className="luma-section-title">When</h3>
+                  <div className="create-event-row">
+                    <div className="create-event-field">
+                      <label className="create-event-label">Date</label>
+                      <input
+                        className="create-event-input"
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      />
+                    </div>
+                    <div className="create-event-field">
+                      <label className="create-event-label">Time</label>
+                      <input
+                        className="create-event-input"
+                        type="time"
+                        value={formData.time}
+                        onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="luma-section">
+                  <h3 className="luma-section-title">Location</h3>
+                  <input
+                    className="create-event-input"
+                    type="text"
+                    placeholder="Address or venue name"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  />
+                </div>
+
+                {/* Details */}
+                <div className="luma-section">
+                  <h3 className="luma-section-title">Details</h3>
+                  <div className="create-event-row">
+                    <div className="create-event-field">
+                      <label className="create-event-label">Cost ($)</label>
+                      <input
+                        className="create-event-input"
+                        type="number"
+                        placeholder="0"
+                        value={formData.cost}
+                        onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="create-event-field">
+                      <label className="create-event-label">Max Attendees</label>
+                      <input
+                        className="create-event-input"
+                        type="number"
+                        placeholder="20"
+                        value={formData.maxAttendees}
+                        onChange={(e) => setFormData({ ...formData, maxAttendees: e.target.value })}
+                        min="1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* About */}
+                <div className="luma-section">
+                  <h3 className="luma-section-title">About</h3>
+                  <textarea
+                    className="create-event-input create-event-textarea"
+                    placeholder="What's this event about?"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="modal-body">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
+
+            {/* Floating footer */}
+            <div className="luma-floating-footer">
+              <button
+                type="button"
+                className="luma-floating-btn luma-floating-register"
+                disabled={!formData.title.trim()}
+                onClick={() => {
+                  if (!formData.title.trim()) return;
                   const newEvent = {
-                    id: events.length + 1,
-                    ...formData,
-                    attendees: 1,
+                    id: Date.now(),
+                    title: formData.title.trim(),
+                    category: formData.category,
+                    date: formData.date || new Date().toISOString().slice(0, 10),
+                    time: formData.time || "12:00",
+                    location: formData.location.trim() || "TBD",
+                    cost: parseFloat(formData.cost) || 0,
                     maxAttendees: parseInt(formData.maxAttendees) || 20,
-                    image:
-                      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&h=600&fit=crop",
+                    description: formData.description,
+                    image: formData.imageUrl || formData.gradient,
+                    host: signInUsername || "You",
+                    attendees: 1,
                     attendeesList: [],
                     saved: false,
+                    registered: false,
+                    registeredAt: null,
                   };
-                  setEvents([...events, newEvent]);
+                  setEvents((prev) => [newEvent, ...prev]);
                   setFormData({
                     title: "",
                     category: "social",
@@ -2946,114 +3231,16 @@ const App = () => {
                     cost: "0",
                     maxAttendees: "",
                     description: "",
+                    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    imageUrl: "",
                   });
+                  setFormUrl("");
                   setActiveModal(null);
+                  setCurrentPage("explore");
                 }}
               >
-                <div className="form-group">
-                  <label>Event Title</label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    required
-                  >
-                    {/* <option value="social">Social</option>
-                    <option value="fitness">Fitness</option>
-                    <option value="creative">Creative</option>
-                    <option value="professional">Professional</option> */}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Date</label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Time</label>
-                  <input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) =>
-                      setFormData({ ...formData, time: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Location</label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Cost ($)</label>
-                  <input
-                    type="number"
-                    value={formData.cost}
-                    onChange={(e) =>
-                      setFormData({ ...formData, cost: e.target.value })
-                    }
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Max Attendees</label>
-                  <input
-                    type="number"
-                    value={formData.maxAttendees}
-                    onChange={(e) =>
-                      setFormData({ ...formData, maxAttendees: e.target.value })
-                    }
-                    min="1"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  ></textarea>
-                </div>
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => setActiveModal(null)}
-                  >
-                    Save Draft
-                  </button>
-                  <button type="submit" className="btn-success">
-                    Create Event
-                  </button>
-                </div>
-              </form>
+                Create Event
+              </button>
             </div>
           </div>
         </div>
