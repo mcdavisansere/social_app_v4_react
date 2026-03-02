@@ -1218,8 +1218,8 @@ const App = () => {
 
   const handleSignIn = (e) => {
     e.preventDefault();
-    if (!signInUsername.trim() || !signInPassword.trim()) {
-      setSignInError("Please enter both username and password");
+    if (signInUsername.trim() !== "niche" || signInPassword.trim() !== "niche") {
+      setSignInError("Incorrect username or password");
       return;
     }
     setSignInError("");
